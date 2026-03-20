@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ESP32 遠端控制中心</title>
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding-top: 50px; }
+        .btn { padding: 20px 40px; font-size: 20px; cursor: pointer; margin: 10px; border-radius: 10px; border: none; }
+        .on { background-color: #4CAF50; color: white; }
+        .off { background-color: #f44336; color: white; }
+    </style>
+</head>
+<body>
+    <h1>我的物聯網控制燈</h1>
+    <button class="btn on" onclick="sendCommand('ON')">點亮 LED</button>
+    <button class="btn off" onclick="sendCommand('OFF')">關閉 LED</button>
+
+    <script>
+        // 連接到公共測試 Broker (範例用，建議之後換成私人的)
+        const client = mqtt.connect('wss://broker.hivemq.com:8884/mqtt');
+
+        function sendCommand(cmd) {
+            console.log("發送指令:", cmd);
+            client.publish('myhome/led', cmd);
+        }
+    </script>
+</body>
+</html>
