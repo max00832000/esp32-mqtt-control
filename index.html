@@ -170,7 +170,7 @@
         // 這裡填入你的 HiveMQ WebSocket URL
         // 格式例如: 'wss://xxxxxxxx.s1.eu.hivemq.cloud:8884/mqtt'
         const MQTT_URL = 'wss://broker.hivemq.com:8884/mqtt'; 
-        const TOPIC_CMD = 'myhome/led'; // 與 ESP32 訂閱的主題一致
+        const TOPIC_CMD = 'user/unique_id_x12345/vibrator/cmd'; // 與 ESP32 訂閱的主題一致
 
         let isPowerOn = false;
         let mqttClient = null;
