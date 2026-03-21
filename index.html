@@ -3,27 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Intimate Pulse コントロール</title>
+    <title>Intimate Pulse V2</title>
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <style>
-        /* --- CSS 視覺美化開始 --- */
         :root {
-            /* 定義情趣風格配色 */
-            --bg-color: #121212; /* 深邃黑背景 */
-            --card-bg: #1e1e1e;   /* 稍微淺一點的黑色卡片 */
-            --primary-gradient: linear-gradient(135deg, #ff007f 0%, #a020f0 100%); /* 桃紅轉粉紫漸層 */
-            --shadow-color: rgba(255, 0, 127, 0.3);
-            --text-color: #e0e0e0;
-            --inactive-color: #444;
-        }
-
-        * {
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent; /* 移除行動端點擊高亮 */
+            --bg-color: #0f0f0f;
+            --card-bg: #1a1a1a;
+            --primary-gradient: linear-gradient(135deg, #ff007f 0%, #a020f0 100%);
+            --glow-color: rgba(255, 0, 127, 0.5);
+            --text-color: #f0f0f0;
         }
 
         body {
-            font-family: 'PingFang TC', 'Heiti TC', 'Noto Sans CJK TC', sans-serif;
+            font-family: sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             display: flex;
@@ -31,203 +23,186 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            overflow: hidden; /* 防止捲動 */
+            touch-action: none; /* 防止移動端縮放 */
         }
 
-        /* 主控制卡片 */
         .control-panel {
             background-color: var(--card-bg);
             width: 90%;
-            max-width: 350px;
-            padding: 40px 30px;
-            border-radius: 40px; /* 超大圓角，營造柔軟感 */
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            max-width: 380px;
+            padding: 50px 20px;
+            border-radius: 50px;
             text-align: center;
-            border: 1px solid #2a2a2a;
-        }
-
-        h1 {
-            font-size: 1.2rem;
-            font-weight: 300;
-            letter-spacing: 2px;
-            margin-bottom: 5px;
-            color: #888;
-        }
-
-        .device-name {
-            font-size: 1.8rem;
-            font-weight: 600;
-            background: var(--primary-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 40px;
-        }
-
-        /* 狀態指示燈 */
-        .status-bar {
-            font-size: 0.8rem;
-            color: #666;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        #status-dot {
-            height: 8px;
-            width: 8px;
-            background-color: var(--inactive-color);
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 8px;
-            transition: all 0.3s ease;
-        }
-
-        #status-dot.connected {
-            background-color: #00ff88; /* 連線成功變綠色 */
-            box-shadow: 0 0 10px #00ff88;
-        }
-
-        /* 呼吸燈樣式的按鈕 (主要互動元件) */
-        .pulse-button {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%; /* 圓形按鈕 */
-            border: none;
-            background-color: var(--inactive-color);
-            color: white;
-            font-size: 1.2rem;
-            font-weight: 600;
-            cursor: pointer;
-            outline: none;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* 彈性動畫 */
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            margin: 20px auto;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
             position: relative;
+        }
+
+        /* 旋鈕容器 */
+        .knob-container {
+            position: relative;
+            width: 260px;
+            height: 260px;
+            margin: 0 auto 30px;
             display: flex;
             justify-content: center;
             align-items: center;
         }
 
-        /* 按鈕激活狀態 (ON) */
-        .pulse-button.active {
-            background: var(--primary-gradient);
-            box-shadow: 0 0 30px var(--shadow-color);
-            transform: scale(1.05);
-        }
-
-        /* 激活時的呼吸光暈動畫 */
-        .pulse-button.active::after {
-            content: '';
+        /* 外圈圓環軌道 */
+        .ring-svg {
             position: absolute;
+            transform: rotate(-90deg);
             width: 100%;
             height: 100%;
+        }
+
+        .ring-track {
+            fill: none;
+            stroke: #333;
+            stroke-width: 12;
+        }
+
+        .ring-progress {
+            fill: none;
+            stroke: url(#grad1);
+            stroke-width: 14;
+            stroke-linecap: round;
+            stroke-dasharray: 628; /* 2 * PI * 100 */
+            stroke-dashoffset: 628;
+            transition: stroke-dashoffset 0.1s ease;
+        }
+
+        /* 中心按鈕 */
+        .pulse-button {
+            width: 160px;
+            height: 160px;
             border-radius: 50%;
+            border: none;
+            background: #222;
+            color: white;
+            z-index: 10;
+            cursor: pointer;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+            transition: all 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .pulse-button.active {
             background: var(--primary-gradient);
-            opacity: 0.7;
-            z-idex: -1;
-            animation: pulse-glow 2s infinite;
+            box-shadow: 0 0 40px var(--glow-color);
         }
 
-        @keyframes pulse-glow {
-            0% { transform: scale(1); opacity: 0.7; }
-            70% { transform: scale(1.4); opacity: 0; }
-            100% { transform: scale(1); opacity: 0; }
-        }
-
-        .button-label {
-            margin-top: 10px;
+        /* 數值顯示 */
+        .intensity-display {
             font-size: 0.9rem;
-            color: #aaa;
+            color: #888;
+            margin-top: 10px;
+            letter-spacing: 2px;
         }
 
-        /* --- CSS 視覺美化結束 --- */
+        .value-text {
+            color: #ff007f;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
     </style>
 </head>
 <body>
 
     <div class="control-panel">
-        <div class="status-bar">
-            <span id="status-dot"></span>
-            <span id="status-text">連線中...</span>
-        </div>
-        
-        <h1>遠端遙控</h1>
-        <div class="device-name">Intimate Pulse</div>
+        <div class="device-name" style="margin-bottom: 30px; font-size: 1.5rem; letter-spacing: 3px;">PULSE CONTROL</div>
 
-        <button id="powerBtn" class="pulse-button" onclick="togglePower()">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                <line x1="12" y1="2" x2="12" y2="12"></line>
+        <div class="knob-container" id="knobContainer">
+            <svg class="ring-svg" viewBox="0 0 220 220">
+                <defs>
+                    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#ff007f;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#a020f0;stop-opacity:1" />
+                    </linearGradient>
+                </defs>
+                <circle class="ring-track" cx="110" cy="110" r="100"></circle>
+                <circle id="progressRing" class="ring-progress" cx="110" cy="110" r="100"></circle>
             </svg>
-        </button>
-        <div class="button-label" id="pwrLabel">點擊開啟</div>
+
+            <button id="powerBtn" class="pulse-button" onclick="togglePower()">
+                <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                    <line x1="12" y1="2" x2="12" y2="12"></line>
+                </svg>
+            </button>
+        </div>
+
+        <div class="intensity-display">
+            強度強度 <span class="value-text" id="valText">0</span> %
+        </div>
     </div>
 
     <script>
-        // --- JavaScript 邏輯 (保持不變，僅微調介面回饋) ---
-
-        // 這裡填入你的 HiveMQ WebSocket URL
-        // 格式例如: 'wss://xxxxxxxx.s1.eu.hivemq.cloud:8884/mqtt'
-        const MQTT_URL = 'wss://broker.hivemq.com:8884/mqtt'; 
-        const TOPIC_CMD = 'user/unique_id_x12345/vibrator/cmd'; // 與 ESP32 訂閱的主題一致
+        const MQTT_URL = 'wss://broker.hivemq.com:8884/mqtt';
+        const TOPIC_BRIGHTNESS = 'myhome/led/brightness';
+        const client = mqtt.connect(MQTT_URL, { clientId: 'web_' + Math.random().toString(16).slice(2, 10) });
 
         let isPowerOn = false;
-        let mqttClient = null;
-
-        const statusDot = document.getElementById('status-dot');
-        const statusText = document.getElementById('status-text');
+        let brightness = 0;
+        const ring = document.getElementById('progressRing');
+        const valText = document.getElementById('valText');
         const powerBtn = document.getElementById('powerBtn');
-        const pwrLabel = document.getElementById('pwrLabel');
 
-        // 初始化連線
-        function initMqtt() {
-            mqttClient = mqtt.connect(MQTT_URL);
-
-            mqttClient.on('connect', () => {
-                console.log('Connected to MQTT Broker');
-                statusDot.classList.add('connected');
-                statusText.innerText = '已連線';
-            });
-
-            mqttClient.on('error', (err) => {
-                console.error('Connection error: ', err);
-                statusText.innerText = '連線失敗';
-                statusDot.classList.remove('connected');
-            });
-
-            mqttClient.on('close', () => {
-                statusText.innerText = '連線已斷開';
-                statusDot.classList.remove('connected');
-            });
+        function updateUI(val) {
+            const offset = 628 - (val / 100) * 628;
+            ring.style.strokeDashoffset = offset;
+            valText.innerText = val;
+            
+            // 同步 MQTT (加上節流避免過載)
+            const pwmValue = Math.round((val / 100) * 255);
+            if (client.connected) {
+                client.publish(TOPIC_BRIGHTNESS, pwmValue.toString());
+            }
         }
 
-        // 切換電源狀態
         function togglePower() {
-            if (!mqttClient || !mqttClient.connected) {
-                alert('尚未連線到伺服器，請稍候。');
-                return;
-            }
-
             isPowerOn = !isPowerOn;
-
             if (isPowerOn) {
-                // 發送 ON 指令
-                mqttClient.publish(TOPIC_CMD, 'ON', { qos: 1 });
-                // 更新 UI
                 powerBtn.classList.add('active');
-                pwrLabel.innerText = '運行中';
+                if (brightness === 0) { brightness = 30; updateUI(brightness); }
             } else {
-                // 發送 OFF 指令
-                mqttClient.publish(TOPIC_CMD, 'OFF', { qos: 1 });
-                // 更新 UI
                 powerBtn.classList.remove('active');
-                pwrLabel.innerText = '已停止';
+                updateUI(0);
             }
         }
 
-        // 啟動連線
-        initMqtt();
+        // 圓環滑動邏輯
+        const container = document.getElementById('knobContainer');
+        let isDragging = false;
+
+        function handleMove(e) {
+            if (!isDragging) return;
+            const rect = container.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+            const angle = Math.atan2(clientY - centerY, clientX - centerX) * 180 / Math.PI;
+            let normalizedAngle = (angle + 90 + 360) % 360; 
+            
+            brightness = Math.round((normalizedAngle / 360) * 100);
+            if (!isPowerOn && brightness > 0) {
+                isPowerOn = true;
+                powerBtn.classList.add('active');
+            }
+            updateUI(brightness);
+        }
+
+        container.addEventListener('mousedown', () => isDragging = true);
+        window.addEventListener('mouseup', () => isDragging = false);
+        window.addEventListener('mousemove', handleMove);
+        container.addEventListener('touchstart', () => isDragging = true);
+        window.addEventListener('touchend', () => isDragging = false);
+        window.addEventListener('touchmove', handleMove);
+
     </script>
 </body>
 </html>
